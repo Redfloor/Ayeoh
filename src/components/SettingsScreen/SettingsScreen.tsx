@@ -1,8 +1,9 @@
 import styled from '@emotion/styled';
-import { useAyeohStore } from '../../store/ayeohStore';
+import { useAyeohStore, type ControllerLayout } from '../../store/ayeohStore';
 import type { InputSource } from '../../input/types';
 
 const SOURCES: InputSource[] = ['keyboard', 'mouse', 'gamepad', 'voice'];
+const CONTROLLER_LAYOUTS: ControllerLayout[] = ['xbox', 'generic'];
 
 const Wrapper = styled.div`
   max-width: 480px;
@@ -33,6 +34,8 @@ const SectionTitle = styled.h2`
 export function SettingsScreen(): React.JSX.Element {
   const settings = useAyeohStore((state) => state.settings);
   const setDarkMode = useAyeohStore((state) => state.setDarkMode);
+  const setOverlayMode = useAyeohStore((state) => state.setOverlayMode);
+  const setControllerLayout = useAyeohStore((state) => state.setControllerLayout);
   const toggleSourceMute = useAyeohStore((state) => state.toggleSourceMute);
   const setTtsVolume = useAyeohStore((state) => state.setTtsVolume);
 
@@ -49,6 +52,15 @@ export function SettingsScreen(): React.JSX.Element {
         />
       </Row>
 
+      <Row>
+        <span>Overlay mode (transparent background)</span>
+        <input
+          type="checkbox"
+          checked={settings.overlayMode}
+          onChange={(e) => setOverlayMode(e.target.checked)}
+        />
+      </Row>
+
       <SectionTitle>Input sources</SectionTitle>
       {SOURCES.map((source) => (
         <Row key={source}>
@@ -60,6 +72,21 @@ export function SettingsScreen(): React.JSX.Element {
           />
         </Row>
       ))}
+
+      <SectionTitle>Controller</SectionTitle>
+      <Row>
+        <span>Layout</span>
+        <select
+          value={settings.controllerLayout}
+          onChange={(e) => setControllerLayout(e.target.value as ControllerLayout)}
+        >
+          {CONTROLLER_LAYOUTS.map((layout) => (
+            <option key={layout} value={layout}>
+              {layout === 'xbox' ? 'Xbox-style' : 'Generic'}
+            </option>
+          ))}
+        </select>
+      </Row>
 
       <SectionTitle>Speech</SectionTitle>
       <Row>

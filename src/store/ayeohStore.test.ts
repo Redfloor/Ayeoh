@@ -7,6 +7,9 @@ describe('useAyeohStore', () => {
     useAyeohStore.setState({
       history: [],
       latest: null,
+      activeKeys: {},
+      activeMouseButtons: {},
+      gamepads: [],
       settings: useAyeohStore.getInitialState().settings,
     });
   });
@@ -40,5 +43,39 @@ describe('useAyeohStore', () => {
     useAyeohStore.getState().toggleSourceMute('keyboard');
 
     expect(useAyeohStore.getState().settings.mutedSources.keyboard).toBe(true);
+  });
+
+  it('tracks held key state independently of the event log', () => {
+    useAyeohStore.getState().setKeyPressed('A', true);
+    expect(useAyeohStore.getState().activeKeys.A).toBe(true);
+
+    useAyeohStore.getState().setKeyPressed('A', false);
+    expect(useAyeohStore.getState().activeKeys.A).toBe(false);
+  });
+
+  it('tracks held mouse button state', () => {
+    useAyeohStore.getState().setMouseButtonPressed(1, true);
+    expect(useAyeohStore.getState().activeMouseButtons[1]).toBe(true);
+  });
+
+  it('stores gamepad snapshots', () => {
+    const snapshot = { index: 0, id: 'Test Pad', buttons: [], axes: [] };
+    useAyeohStore.getState().setGamepads([snapshot]);
+
+    expect(useAyeohStore.getState().gamepads).toEqual([snapshot]);
+  });
+
+  it('toggles overlay mode', () => {
+    expect(useAyeohStore.getState().settings.overlayMode).toBe(false);
+
+    useAyeohStore.getState().setOverlayMode(true);
+
+    expect(useAyeohStore.getState().settings.overlayMode).toBe(true);
+  });
+
+  it('changes the controller layout', () => {
+    useAyeohStore.getState().setControllerLayout('generic');
+
+    expect(useAyeohStore.getState().settings.controllerLayout).toBe('generic');
   });
 });

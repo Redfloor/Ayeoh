@@ -71,7 +71,7 @@ export function normalizeMouseMove(): MouseInputEvent {
   };
 }
 
-const GAMEPAD_BUTTON_LABELS: Record<number, string> = {
+export const GAMEPAD_BUTTON_LABELS: Record<number, string> = {
   0: 'A / Cross',
   1: 'B / Circle',
   2: 'X / Square',

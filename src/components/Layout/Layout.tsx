@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import styled from '@emotion/styled';
-import { InputFeedback } from '../InputFeedback/InputFeedback';
+import { useAyeohStore } from '../../store/ayeohStore';
+import { Dashboard } from '../Dashboard/Dashboard';
 import { InputLog } from '../InputLog/InputLog';
 import { SettingsScreen } from '../SettingsScreen/SettingsScreen';
 
@@ -8,15 +9,16 @@ const Shell = styled.div`
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: ${(props) => props.theme.background};
+  background: ${(props) => (props.theme.overlay ? 'transparent' : props.theme.background)};
 `;
 
-const TopBar = styled.header`
+const TopBar = styled.header<{ overlay: boolean }>`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid ${(props) => props.theme.border};
+  background: ${(props) => (props.overlay ? 'transparent' : 'none')};
+  border-bottom: ${(props) => (props.overlay ? 'none' : `1px solid ${props.theme.border}`)};
 `;
 
 const Title = styled.h1`
@@ -42,10 +44,11 @@ const Body = styled.div`
 
 export function Layout(): React.JSX.Element {
   const [showSettings, setShowSettings] = useState(false);
+  const overlayMode = useAyeohStore((state) => state.settings.overlayMode);
 
   return (
     <Shell>
-      <TopBar>
+      <TopBar overlay={overlayMode}>
         <Title>Ayeoh</Title>
         <NavButton onClick={() => setShowSettings((value) => !value)}>
           {showSettings ? 'Back' : 'Settings'}
@@ -55,7 +58,7 @@ export function Layout(): React.JSX.Element {
         <SettingsScreen />
       ) : (
         <Body>
-          <InputFeedback />
+          <Dashboard />
           <InputLog />
         </Body>
       )}

@@ -5,9 +5,10 @@ export interface AyeohTheme {
   textMuted: string;
   accent: string;
   border: string;
+  overlay: boolean;
 }
 
-export const lightTheme: AyeohTheme = {
+const lightPalette = {
   background: '#f4f4f6',
   surface: '#ffffff',
   text: '#1a1a1f',
@@ -16,7 +17,7 @@ export const lightTheme: AyeohTheme = {
   border: '#d8d8e0',
 };
 
-export const darkTheme: AyeohTheme = {
+const darkPalette = {
   background: '#15151a',
   surface: '#1f1f27',
   text: '#f4f4f6',
@@ -24,6 +25,13 @@ export const darkTheme: AyeohTheme = {
   accent: '#6ea0ff',
   border: '#33333e',
 };
+
+export function buildTheme(darkMode: boolean, overlay: boolean): AyeohTheme {
+  return {
+    ...(darkMode ? darkPalette : lightPalette),
+    overlay,
+  };
+}
 
 declare module '@emotion/react' {
   export interface Theme extends AyeohTheme {}

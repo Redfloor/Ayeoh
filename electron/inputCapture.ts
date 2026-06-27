@@ -6,7 +6,7 @@ import {
   normalizeMouseMove,
   normalizeMouseWheel,
 } from '../src/input/normalize';
-import type { InputEvent } from '../src/input/types';
+import type { InputEvent, KeyStateChange, MouseButtonStateChange } from '../src/input/types';
 
 const KEY_NAME_BY_CODE = new Map<number, string>(
   Object.entries(UiohookKey).map(([name, code]) => [code, name]),
@@ -22,14 +22,34 @@ function send(window: BrowserWindow, event: InputEvent | null): void {
   window.webContents.send('ayeoh:input-event', event);
 }
 
+function sendKeyState(window: BrowserWindow, payload: KeyStateChange): void {
+  window.webContents.send('ayeoh:key-state', payload);
+}
+
+function sendMouseButtonState(window: BrowserWindow, payload: MouseButtonStateChange): void {
+  window.webContents.send('ayeoh:mouse-button-state', payload);
+}
+
 export function startInputCapture(window: BrowserWindow): () => void {
   const onKeydown = (e: UiohookKeyboardEvent): void => {
     const keyName = KEY_NAME_BY_CODE.get(e.keycode) ?? `Key ${e.keycode}`;
     send(window, normalizeKeyboard(keyName, 'down'));
+    sendKeyState(window, { key: keyName, pressed: true });
+  };
+
+  const onKeyup = (e: UiohookKeyboardEvent): void => {
+    const keyName = KEY_NAME_BY_CODE.get(e.keycode) ?? `Key ${e.keycode}`;
+    sendKeyState(window, { key: keyName, pressed: false });
   };
 
   const onMousedown = (e: UiohookMouseEvent): void => {
-    send(window, normalizeMouseButton(Number(e.button), 'down'));
+    const button = Number(e.button);
+    send(window, normalizeMouseButton(button, 'down'));
+    sendMouseButtonState(window, { button, pressed: true });
+  };
+
+  const onMouseup = (e: UiohookMouseEvent): void => {
+    sendMouseButtonState(window, { button: Number(e.button), pressed: false });
   };
 
   const onMousemove = (): void => {
@@ -46,14 +66,18 @@ export function startInputCapture(window: BrowserWindow): () => void {
   };
 
   uIOhook.on('keydown', onKeydown);
+  uIOhook.on('keyup', onKeyup);
   uIOhook.on('mousedown', onMousedown);
+  uIOhook.on('mouseup', onMouseup);
   uIOhook.on('mousemove', onMousemove);
   uIOhook.on('wheel', onWheel);
   uIOhook.start();
 
   return () => {
     uIOhook.off('keydown', onKeydown);
+    uIOhook.off('keyup', onKeyup);
     uIOhook.off('mousedown', onMousedown);
+    uIOhook.off('mouseup', onMouseup);
     uIOhook.off('mousemove', onMousemove);
     uIOhook.off('wheel', onWheel);
     uIOhook.stop();

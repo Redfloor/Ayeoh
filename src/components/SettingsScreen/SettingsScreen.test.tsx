@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { SettingsScreen } from './SettingsScreen';
 import { useAyeohStore } from '../../store/ayeohStore';
-import { darkTheme } from '../../theme/theme';
+import { buildTheme } from '../../theme/theme';
 
 function renderWithTheme(): ReturnType<typeof render> {
   return render(
-    <ThemeProvider theme={darkTheme}>
+    <ThemeProvider theme={buildTheme(true, false)}>
       <SettingsScreen />
     </ThemeProvider>,
   );
@@ -35,5 +35,23 @@ describe('SettingsScreen', () => {
     await userEvent.click(keyboardToggle);
 
     expect(useAyeohStore.getState().settings.mutedSources.keyboard).toBe(true);
+  });
+
+  it('toggles overlay mode', async () => {
+    renderWithTheme();
+    const toggle = screen.getByLabelText(/overlay mode/i);
+
+    await userEvent.click(toggle);
+
+    expect(useAyeohStore.getState().settings.overlayMode).toBe(true);
+  });
+
+  it('changes the controller layout', async () => {
+    renderWithTheme();
+    const select = screen.getByLabelText(/layout/i);
+
+    await userEvent.selectOptions(select, 'generic');
+
+    expect(useAyeohStore.getState().settings.controllerLayout).toBe('generic');
   });
 });

@@ -3,8 +3,8 @@ import { useAyeohStore } from '../../store/ayeohStore';
 
 const Wrapper = styled.aside`
   width: 260px;
-  border-left: 1px solid ${(props) => props.theme.border};
-  background: ${(props) => props.theme.surface};
+  border-left: ${(props) => (props.theme.overlay ? 'none' : `1px solid ${props.theme.border}`)};
+  background: ${(props) => (props.theme.overlay ? 'transparent' : props.theme.surface)};
   overflow-y: auto;
   padding: 1rem;
 `;

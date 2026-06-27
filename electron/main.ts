@@ -16,6 +16,8 @@ function createWindow(): BrowserWindow {
     width: 1024,
     height: 768,
     autoHideMenuBar: true,
+    transparent: true,
+    backgroundColor: '#00000000',
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,

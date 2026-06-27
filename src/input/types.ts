@@ -36,19 +36,24 @@ export type InputEvent =
   | GamepadInputEvent
   | VoiceInputEvent;
 
-export interface RawKeyboardPayload {
+export interface KeyStateChange {
   key: string;
-  direction: 'down' | 'up';
+  pressed: boolean;
 }
 
-export interface RawMousePayload {
-  kind: 'button' | 'move' | 'wheel';
-  button?: number;
-  x?: number;
-  y?: number;
-  direction?: 'down' | 'up';
+export interface MouseButtonStateChange {
+  button: number;
+  pressed: boolean;
 }
 
-export interface RawVoicePayload {
-  transcript: string;
+export interface GamepadButtonSnapshot {
+  pressed: boolean;
+  value: number;
+}
+
+export interface GamepadSnapshot {
+  index: number;
+  id: string;
+  buttons: GamepadButtonSnapshot[];
+  axes: number[];
 }

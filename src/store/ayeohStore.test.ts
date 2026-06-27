@@ -78,4 +78,12 @@ describe('useAyeohStore', () => {
 
     expect(useAyeohStore.getState().settings.controllerLayout).toBe('generic');
   });
+
+  it('toggles panel visibility', () => {
+    expect(useAyeohStore.getState().settings.visiblePanels.log).toBe(true);
+
+    useAyeohStore.getState().togglePanelVisibility('log');
+
+    expect(useAyeohStore.getState().settings.visiblePanels.log).toBe(false);
+  });
 });

@@ -30,11 +30,20 @@ describe('SettingsScreen', () => {
 
   it('mutes an input source', async () => {
     renderWithTheme();
-    const keyboardToggle = screen.getByLabelText(/keyboard/i);
+    const keyboardToggle = screen.getByLabelText(/keyboard \(speak aloud\)/i);
 
     await userEvent.click(keyboardToggle);
 
     expect(useAyeohStore.getState().settings.mutedSources.keyboard).toBe(true);
+  });
+
+  it('hides a displayed panel', async () => {
+    renderWithTheme();
+    const logToggle = screen.getByLabelText(/recent inputs \(show panel\)/i);
+
+    await userEvent.click(logToggle);
+
+    expect(useAyeohStore.getState().settings.visiblePanels.log).toBe(false);
   });
 
   it('toggles overlay mode', async () => {

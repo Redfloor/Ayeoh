@@ -6,10 +6,13 @@ const HISTORY_LIMIT = 50;
 
 export type ControllerLayout = 'xbox' | 'generic';
 
+export type PanelKey = 'keyboard' | 'mouse' | 'controller' | 'voice' | 'log';
+
 export interface AyeohSettings {
   darkMode: boolean;
   overlayMode: boolean;
   mutedSources: Record<InputSource, boolean>;
+  visiblePanels: Record<PanelKey, boolean>;
   ttsVoiceName: string | null;
   ttsVolume: number;
   micDeviceId: string | null;
@@ -28,6 +31,7 @@ interface AyeohState {
   setMouseButtonPressed: (button: number, pressed: boolean) => void;
   setGamepads: (gamepads: GamepadSnapshot[]) => void;
   toggleSourceMute: (source: InputSource) => void;
+  togglePanelVisibility: (panel: PanelKey) => void;
   setDarkMode: (darkMode: boolean) => void;
   setOverlayMode: (overlayMode: boolean) => void;
   setControllerLayout: (layout: ControllerLayout) => void;
@@ -44,6 +48,13 @@ const defaultSettings: AyeohSettings = {
     mouse: false,
     gamepad: false,
     voice: false,
+  },
+  visiblePanels: {
+    keyboard: true,
+    mouse: true,
+    controller: true,
+    voice: true,
+    log: true,
   },
   ttsVoiceName: null,
   ttsVolume: 1,
@@ -84,6 +95,16 @@ export const useAyeohStore = create<AyeohState>()(
             },
           },
         })),
+      togglePanelVisibility: (panel) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            visiblePanels: {
+              ...state.settings.visiblePanels,
+              [panel]: !state.settings.visiblePanels[panel],
+            },
+          },
+        })),
       setDarkMode: (darkMode) =>
         set((state) => ({ settings: { ...state.settings, darkMode } })),
       setOverlayMode: (overlayMode) =>
@@ -100,6 +121,10 @@ export const useAyeohStore = create<AyeohState>()(
     {
       name: 'ayeoh-settings',
       partialize: (state) => ({ settings: state.settings }),
+      merge: (persisted, current) => ({
+        ...current,
+        settings: { ...current.settings, ...(persisted as { settings?: Partial<AyeohSettings> })?.settings },
+      }),
     },
   ),
 );

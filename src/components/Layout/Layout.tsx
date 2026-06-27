@@ -45,6 +45,7 @@ const Body = styled.div`
 export function Layout(): React.JSX.Element {
   const [showSettings, setShowSettings] = useState(false);
   const overlayMode = useAyeohStore((state) => state.settings.overlayMode);
+  const showLog = useAyeohStore((state) => state.settings.visiblePanels.log);
 
   return (
     <Shell>
@@ -59,7 +60,7 @@ export function Layout(): React.JSX.Element {
       ) : (
         <Body>
           <Dashboard />
-          <InputLog />
+          {showLog && <InputLog />}
         </Body>
       )}
     </Shell>

@@ -1,13 +1,17 @@
 import path from 'node:path';
 import fs from 'node:fs';
 import { spawnSync } from 'node:child_process';
-import type { BrowserWindow } from 'electron';
+import { app, type BrowserWindow } from 'electron';
 import mic from 'mic';
 import vosk from 'vosk-koffi';
 import { normalizeVoice } from '../../src/input/normalize';
 
 const SAMPLE_RATE = 16000;
-const DEFAULT_MODEL_DIR = path.join(process.cwd(), 'models', 'vosk-model-small-en-us');
+
+// process.cwd() is unpredictable for a double-clicked installed app, so anchor
+// the models lookup to the executable's own directory instead.
+const APP_ROOT = app.isPackaged ? path.dirname(app.getPath('exe')) : process.cwd();
+const DEFAULT_MODEL_DIR = path.join(APP_ROOT, 'models', 'vosk-model-small-en-us');
 
 const MIC_BINARY_BY_PLATFORM: Record<string, string> = {
   win32: 'sox',

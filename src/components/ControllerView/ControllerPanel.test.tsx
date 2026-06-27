@@ -32,9 +32,11 @@ describe('ControllerPanel', () => {
     });
   });
 
-  it('shows a placeholder when no controller is connected', () => {
+  it('shows a layout preview when no controller is connected', () => {
     renderWithTheme();
-    expect(screen.getByText(/no controller connected/i)).toBeInTheDocument();
+    expect(screen.getByText(/showing layout preview/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/controller -1/i)).toBeInTheDocument();
+    expect(screen.getByText('A')).toBeInTheDocument();
   });
 
   it('renders a connected controller and highlights a pressed button', () => {

@@ -3,6 +3,8 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "description": "Visualizes and speaks every keyboard, mouse, controller, and voice input on your device",
+  "author": "Redfloor",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",

@@ -57,7 +57,9 @@ npm install
 Voice input requires a Vosk speech model, downloaded separately (it's too large to commit to the repo):
 
 1. Download a model from the [Vosk model list](https://alphacephei.com/vosk/models) — `vosk-model-small-en-us-0.15` is a good lightweight default.
-2. Unzip it into `models/vosk-model-small-en-us` at the repo root (so `models/vosk-model-small-en-us/am/final.mdl` exists).
+2. Unzip it into `models/vosk-model-small-en-us`:
+   - **Running from source**: at the repo root (so `models/vosk-model-small-en-us/am/final.mdl` exists next to `package.json`).
+   - **Running a packaged/installed build**: in the same folder as the installed `Ayeoh.exe` (e.g. wherever the installer put it — check the shortcut's "Open file location"). The app looks for `models/` next to its own executable, not next to wherever it happened to be launched from.
 
 If no model is present at startup, voice input is silently disabled — keyboard, mouse, and controller input still work normally.
 
@@ -87,14 +89,20 @@ npm run build     # type-check + build renderer and electron main/preload
 npm run build-electron
 ```
 
-Produces a packaged app under `release/` via `electron-builder`.
+Produces an NSIS installer (`release/Ayeoh Setup <version>.exe`) plus an unpacked build (`release/win-unpacked/`) via `electron-builder`. Either can be copied to another Windows machine — the installer is the normal way to ship it.
+
+Notes for the target machine:
+- `uiohook-napi` (global keyboard/mouse capture) is bundled and works out of the box.
+- Voice input needs the Vosk model folder placed next to the installed exe, and SoX on `PATH` — see "Voice recognition" above. Without those, the app still runs fine with voice simply disabled.
+- The Gamepad API works in Electron's renderer the same as in Chrome, so any controller the OS recognizes should show up — including in the Controller panel's live layout preview, which renders even with no controller plugged in (see Settings → Displayed panels).
 
 ## Settings
 
 The in-app Settings screen (top-right button) lets you:
 - Toggle dark mode (applies live, persists across restarts)
 - Toggle overlay mode (transparent background, see above)
-- Mute/unmute feedback per input source (keyboard, mouse, gamepad, voice)
+- Mute/unmute spoken feedback per input source (keyboard, mouse, gamepad, voice)
+- Show/hide each displayed panel independently (keyboard, mouse, controller, voice, recent inputs)
 - Choose the controller layout (Xbox-style or generic list)
 - Adjust text-to-speech volume
 

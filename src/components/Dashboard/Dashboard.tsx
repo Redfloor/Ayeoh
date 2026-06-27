@@ -1,4 +1,5 @@
 import styled from '@emotion/styled';
+import { useAyeohStore } from '../../store/ayeohStore';
 import { KeyboardView } from '../KeyboardView/KeyboardView';
 import { MouseView } from '../MouseView/MouseView';
 import { ControllerPanel } from '../ControllerView/ControllerPanel';
@@ -24,20 +25,31 @@ const Column = styled.div`
 `;
 
 export function Dashboard(): React.JSX.Element {
+  const visiblePanels = useAyeohStore((state) => state.settings.visiblePanels);
+  const showRow = visiblePanels.mouse || visiblePanels.controller || visiblePanels.voice;
+
   return (
     <Grid>
-      <KeyboardView />
-      <Row>
-        <Column>
-          <MouseView />
-        </Column>
-        <Column style={{ flex: 1.5 }}>
-          <ControllerPanel />
-        </Column>
-        <Column>
-          <VoiceView />
-        </Column>
-      </Row>
+      {visiblePanels.keyboard && <KeyboardView />}
+      {showRow && (
+        <Row>
+          {visiblePanels.mouse && (
+            <Column>
+              <MouseView />
+            </Column>
+          )}
+          {visiblePanels.controller && (
+            <Column style={{ flex: 1.5 }}>
+              <ControllerPanel />
+            </Column>
+          )}
+          {visiblePanels.voice && (
+            <Column>
+              <VoiceView />
+            </Column>
+          )}
+        </Row>
+      )}
     </Grid>
   );
 }

@@ -30,7 +30,12 @@ function createWindow(): BrowserWindow {
   }
 
   stopInputCapture = startInputCapture(mainWindow);
-  voiceHandle = startVoiceService(mainWindow);
+  try {
+    voiceHandle = startVoiceService(mainWindow);
+  } catch (error) {
+    console.error('[main] failed to start voice service, voice input is disabled:', error);
+    voiceHandle = null;
+  }
 
   mainWindow.on('closed', () => {
     stopInputCapture?.();

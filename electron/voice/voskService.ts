@@ -1,23 +1,15 @@
 import path from 'node:path';
 import fs from 'node:fs';
-import { spawnSync } from 'node:child_process';
-import { app, type BrowserWindow } from 'electron';
-import mic from 'mic';
+import { app, ipcMain, type BrowserWindow } from 'electron';
 import vosk from 'vosk-koffi';
 import { normalizeVoice } from '../../src/input/normalize';
 
 const SAMPLE_RATE = 16000;
 
-// process.cwd() is unpredictable for a double-clicked installed app, so anchor
-// the models lookup to the executable's own directory instead.
-const APP_ROOT = app.isPackaged ? path.dirname(app.getPath('exe')) : process.cwd();
-const DEFAULT_MODEL_DIR = path.join(APP_ROOT, 'models', 'vosk-model-small-en-us');
-
-const MIC_BINARY_BY_PLATFORM: Record<string, string> = {
-  win32: 'sox',
-  darwin: 'rec',
-};
-const MIC_BINARY = MIC_BINARY_BY_PLATFORM[process.platform] ?? 'arecord';
+// process.cwd() is unpredictable for a double-clicked installed app, and a packaged
+// app ships its bundled resources under process.resourcesPath, not next to the exe.
+const MODEL_BASE_DIR = app.isPackaged ? process.resourcesPath : process.cwd();
+const DEFAULT_MODEL_DIR = path.join(MODEL_BASE_DIR, 'models', 'vosk-model-small-en-us');
 
 interface VoiceServiceHandle {
   stop: () => void;
@@ -27,14 +19,9 @@ export function isVoskModelAvailable(modelPath: string = DEFAULT_MODEL_DIR): boo
   return fs.existsSync(modelPath);
 }
 
-function isMicBinaryAvailable(): boolean {
-  const result = spawnSync(MIC_BINARY, ['--version'], { stdio: 'ignore' });
-  return result.error === undefined;
-}
-
 export function startVoiceService(
   window: BrowserWindow,
-  options: { modelPath?: string; deviceId?: string | null } = {},
+  options: { modelPath?: string } = {},
 ): VoiceServiceHandle | null {
   const modelPath = options.modelPath ?? DEFAULT_MODEL_DIR;
 
@@ -42,26 +29,12 @@ export function startVoiceService(
     return null;
   }
 
-  if (!isMicBinaryAvailable()) {
-    console.warn(
-      `[voskService] "${MIC_BINARY}" was not found on PATH, so voice input is disabled. See README for the audio capture prerequisite.`,
-    );
-    return null;
-  }
-
   vosk.setLogLevel(-1);
   const model = new vosk.Model(modelPath);
   const recognizer = new vosk.Recognizer({ model, sampleRate: SAMPLE_RATE });
 
-  const micInstance = mic({
-    rate: String(SAMPLE_RATE),
-    channels: '1',
-    device: options.deviceId ?? 'default',
-  });
-  const micStream = micInstance.getAudioStream();
-
-  micStream.on('data', (chunk: Buffer) => {
-    const hasUtterance = recognizer.acceptWaveform(chunk);
+  const onAudioChunk = (_event: unknown, chunk: ArrayBuffer): void => {
+    const hasUtterance = recognizer.acceptWaveform(Buffer.from(chunk));
     if (!hasUtterance) {
       return;
     }
@@ -69,17 +42,13 @@ export function startVoiceService(
     if (text.trim().length > 0) {
       window.webContents.send('ayeoh:input-event', normalizeVoice(text.trim()));
     }
-  });
+  };
 
-  micStream.on('error', (err: Error) => {
-    console.error('[voskService] mic stream error:', err);
-  });
-
-  micInstance.start();
+  ipcMain.on('ayeoh:voice-audio-chunk', onAudioChunk);
 
   return {
     stop: () => {
-      micInstance.stop();
+      ipcMain.removeListener('ayeoh:voice-audio-chunk', onAudioChunk);
       recognizer.free();
       model.free();
     },

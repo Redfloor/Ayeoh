@@ -13,7 +13,7 @@ export default defineConfig({
         vite: {
           build: {
             rolldownOptions: {
-              external: ['uiohook-napi', 'vosk-koffi', 'koffi', 'mic'],
+              external: ['uiohook-napi', 'vosk-koffi', 'koffi'],
             },
           },
         },

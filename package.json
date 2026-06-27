@@ -18,7 +18,6 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "mic": "^2.1.2",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "uiohook-napi": "^1.5.5",
@@ -50,6 +49,13 @@
     "files": [
       "dist",
       "dist-electron"
+    ],
+    "extraResources": [
+      {
+        "from": "models",
+        "to": "models",
+        "filter": ["**/*"]
+      }
     ],
     "directories": {
       "output": "release"

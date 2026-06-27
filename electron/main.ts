@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow, ipcMain, session } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { startInputCapture } from './inputCapture';
@@ -48,6 +48,9 @@ function createWindow(): BrowserWindow {
 }
 
 app.on('ready', () => {
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    callback(permission === 'media');
+  });
   createWindow();
 });
 

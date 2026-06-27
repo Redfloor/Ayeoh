@@ -4,6 +4,7 @@ import type { InputEvent, KeyStateChange, MouseButtonStateChange } from '../src/
 export interface AyeohBridge {
   quitApp: () => void;
   isVoiceAvailable: () => Promise<boolean>;
+  sendVoiceAudioChunk: (chunk: ArrayBuffer) => void;
   onInputEvent: (callback: (event: InputEvent) => void) => () => void;
   onKeyState: (callback: (change: KeyStateChange) => void) => () => void;
   onMouseButtonState: (callback: (change: MouseButtonStateChange) => void) => () => void;
@@ -18,6 +19,7 @@ function subscribe<T>(channel: string, callback: (payload: T) => void): () => vo
 const bridge: AyeohBridge = {
   quitApp: () => ipcRenderer.send('ayeoh:quit-app'),
   isVoiceAvailable: () => ipcRenderer.invoke('ayeoh:voice-available'),
+  sendVoiceAudioChunk: (chunk) => ipcRenderer.send('ayeoh:voice-audio-chunk', chunk),
   onInputEvent: (callback) => subscribe('ayeoh:input-event', callback),
   onKeyState: (callback) => subscribe('ayeoh:key-state', callback),
   onMouseButtonState: (callback) => subscribe('ayeoh:mouse-button-state', callback),

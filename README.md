@@ -8,7 +8,7 @@ It was built to help a kid build a clearer mental model of what their input devi
 
 - **Keyboard & mouse** are captured globally (even when the app isn't focused) by a native hook (`uiohook-napi`) running in the Electron main process. Key-down/mouse-down events are normalized into the shared event log (and spoken via TTS); key-up/mouse-up events update a separate "currently held" state used to light up the keyboard/mouse views in real time.
 - **Game controllers** are read in the renderer via the browser's [Gamepad API](https://developer.mozilla.org/en-US/docs/Web/API/Gamepad_API) (polled continuously, since that API only exists in a web/renderer context). Each poll produces a full snapshot of every connected pad's buttons and stick positions, driving the live controller diagram.
-- **Voice** is transcribed fully offline using [Vosk](https://alphacephei.com/vosk/) (via the `vosk-koffi` binding) on captured microphone audio in the main process — no audio leaves the device, and no internet connection is required. (The browser's built-in `SpeechRecognition` was intentionally avoided because it calls out to Google's servers and won't work offline.)
+- **Voice** is transcribed fully offline using [Vosk](https://alphacephei.com/vosk/) (via the `vosk-koffi` binding). The microphone is captured in the renderer with the browser's `getUserMedia`/`AudioContext` APIs (resampled to 16kHz PCM) and streamed to the main process over IPC for recognition — no external audio tool (e.g. SoX) is required. No audio leaves the device and no internet connection is needed. (The browser's built-in `SpeechRecognition` was intentionally avoided because it calls out to Google's servers and won't work offline.)
 - **Text-to-speech** uses the browser's built-in `speechSynthesis` API, which works fully offline using the operating system's installed voices. Each new input interrupts (cancels) whatever is currently being spoken, so TTS always announces the latest input rather than queuing up a backlog. Voice input itself is not spoken back (to avoid echoing what was just said).
 - All input events flow through one shared, in-memory history (Zustand store) that drives the persistent per-type views and a scrolling recent-input log.
 
@@ -31,9 +31,9 @@ electron/
   main.ts            Electron app lifecycle, window creation, wires up capture + voice
   preload.ts         contextBridge: exposes a typed window.ayeoh API to the renderer
   inputCapture.ts     Global keyboard/mouse capture (uiohook-napi) -> normalized events + held-state
-  voice/voskService.ts  Offline speech-to-text via Vosk + mic capture
+  voice/voskService.ts  Offline speech-to-text via Vosk, fed PCM audio chunks from the renderer
 src/
-  input/             Shared event types, normalization logic, Gamepad polling, TTS hook
+  input/             Shared event types, normalization logic, Gamepad polling, TTS hook, voice capture (getUserMedia)
   store/             Zustand store: input history, held-state, gamepad snapshots, settings (persisted)
   theme/             Light/dark/overlay Emotion theme builder
   components/
@@ -52,20 +52,16 @@ src/
 npm install
 ```
 
-### Voice recognition (optional)
+### Voice recognition (optional, for running from source)
 
 Voice input requires a Vosk speech model, downloaded separately (it's too large to commit to the repo):
 
 1. Download a model from the [Vosk model list](https://alphacephei.com/vosk/models) — `vosk-model-small-en-us-0.15` is a good lightweight default.
-2. Unzip it into `models/vosk-model-small-en-us`:
-   - **Running from source**: at the repo root (so `models/vosk-model-small-en-us/am/final.mdl` exists next to `package.json`).
-   - **Running a packaged/installed build**: in the same folder as the installed `Ayeoh.exe` (e.g. wherever the installer put it — check the shortcut's "Open file location"). The app looks for `models/` next to its own executable, not next to wherever it happened to be launched from.
+2. Unzip it into `models/vosk-model-small-en-us` at the repo root (so `models/vosk-model-small-en-us/am/final.mdl` exists next to `package.json`).
 
-If no model is present at startup, voice input is silently disabled — keyboard, mouse, and controller input still work normally.
+If no model is present at startup, voice input is silently disabled — keyboard, mouse, and controller input still work normally. (When you package the app, this model is embedded into the build automatically — see Packaging.)
 
-Microphone capture uses [`mic`](https://www.npmjs.com/package/mic), which shells out to a system audio tool:
-- **Windows / macOS**: install [SoX](http://sox.sourceforge.net/) and ensure it's on your `PATH`.
-- **Linux**: install ALSA tools (`sudo apt-get install alsa-utils`).
+Microphone audio is captured directly by the renderer's `getUserMedia`/`AudioContext` APIs, so no external audio tool needs to be installed on any machine, including the one you ship to. The OS will show its normal one-time microphone-permission prompt the first time the app requests it.
 
 ## Development
 
@@ -89,16 +85,15 @@ npm run build     # type-check + build renderer and electron main/preload
 npm run build-electron
 ```
 
-Produces an NSIS installer (`release/Ayeoh Setup <version>.exe`) plus an unpacked build (`release/win-unpacked/`) via `electron-builder`. Either can be copied to another Windows machine — the installer is the normal way to ship it.
-
-Notes for the target machine:
+Produces an NSIS installer (`release/Ayeoh Setup <version>.exe`) plus an unpacked build (`release/win-unpacked/`) via `electron-builder`. Either can be copied to another Windows machine and just run — no separate setup steps on the target machine:
 - `uiohook-napi` (global keyboard/mouse capture) is bundled and works out of the box.
-- Voice input needs the Vosk model folder placed next to the installed exe, and SoX on `PATH` — see "Voice recognition" above. Without those, the app still runs fine with voice simply disabled.
+- If a `models/vosk-model-small-en-us` folder exists locally at build time, it's automatically embedded into the package (see `extraResources` in `package.json`) — so voice recognition works on the target machine with nothing extra to download or install. If you build without the model present, the app still works fine; voice input is just disabled.
+- Microphone capture needs no external tool (see above), only the OS's own one-time mic-permission prompt on first use.
 - The Gamepad API works in Electron's renderer the same as in Chrome, so any controller the OS recognizes should show up — including in the Controller panel's live layout preview, which renders even with no controller plugged in (see Settings → Displayed panels).
 
 ## Settings
 
-The in-app Settings screen (top-right button) lets you:
+The top bar has a Settings button and a Close button (quits the app). The Settings screen lets you:
 - Toggle dark mode (applies live, persists across restarts)
 - Toggle overlay mode (transparent background, see above)
 - Mute/unmute spoken feedback per input source (keyboard, mouse, gamepad, voice)

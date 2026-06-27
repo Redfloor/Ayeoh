@@ -3,10 +3,16 @@ import { useAyeohStore } from './store/ayeohStore';
 import { buildTheme } from './theme/theme';
 import { InputProvider } from './input/InputProvider';
 import { useTts } from './input/useTts';
+import { useVoiceCapture } from './input/useVoiceCapture';
 import { Layout } from './components/Layout/Layout';
 
 function TtsBridge(): null {
   useTts();
+  return null;
+}
+
+function VoiceCaptureBridge(): null {
+  useVoiceCapture();
   return null;
 }
 
@@ -18,6 +24,7 @@ export default function App(): React.JSX.Element {
     <ThemeProvider theme={buildTheme(darkMode, overlayMode)}>
       <InputProvider>
         <TtsBridge />
+        <VoiceCaptureBridge />
         <Layout />
       </InputProvider>
     </ThemeProvider>

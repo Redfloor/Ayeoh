@@ -36,6 +36,19 @@ const NavButton = styled.button`
   cursor: pointer;
 `;
 
+const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.5rem;
+`;
+
+const CloseButton = styled(NavButton)`
+  &:hover {
+    background: #e5484d;
+    border-color: #e5484d;
+    color: #fff;
+  }
+`;
+
 const Body = styled.div`
   display: flex;
   flex: 1;
@@ -51,9 +64,14 @@ export function Layout(): React.JSX.Element {
     <Shell>
       <TopBar overlay={overlayMode}>
         <Title>Ayeoh</Title>
-        <NavButton onClick={() => setShowSettings((value) => !value)}>
-          {showSettings ? 'Back' : 'Settings'}
-        </NavButton>
+        <ButtonGroup>
+          <NavButton onClick={() => setShowSettings((value) => !value)}>
+            {showSettings ? 'Back' : 'Settings'}
+          </NavButton>
+          <CloseButton aria-label="Close Ayeoh" onClick={() => window.ayeoh?.quitApp()}>
+            ✕
+          </CloseButton>
+        </ButtonGroup>
       </TopBar>
       {showSettings ? (
         <SettingsScreen />
